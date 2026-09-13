@@ -1,6 +1,15 @@
-#include <iostream>
+#include <Engine.h>
 
-int main( int argc, const char* argv[] ) {
-    std::cout << "Hello, World!\n";
+int main() {
+    illengine::Engine engine;
+
+    int width = 1024;
+    int height = 768;
+    std::string name = "A game and sh";
+    bool fullscreen = false;
+
+    engine.Startup(width, height, name, fullscreen);
+    engine.RunGameLoop();
+    engine.Shutdown();
     return 0;
 }
