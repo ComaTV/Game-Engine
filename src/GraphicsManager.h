@@ -2,6 +2,8 @@
 
 #include <string>
 
+struct GLFWwindow;
+
 namespace illengine {
     class GraphicsManager {
     public:
@@ -10,6 +12,8 @@ namespace illengine {
 
         bool ShouldQuit() const;
         void SetShouldQuit(bool shouldQuit);
+
+        GLFWwindow* GetWindow();
 
     private:
         struct Impl;

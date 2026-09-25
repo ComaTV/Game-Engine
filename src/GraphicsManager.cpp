@@ -10,6 +10,10 @@ namespace illengine {
         bool shouldQuit = false;
     };
 
+    GLFWwindow* GraphicsManager::GetWindow() {
+        if (!pImpl) return nullptr;
+        return pImpl->window;
+    }
     void GraphicsManager::Startup(int width, int height, const std::string& name, bool fullscreen) {
         pImpl = new Impl();
 

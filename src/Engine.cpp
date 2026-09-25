@@ -2,26 +2,24 @@
 #include <spdlog/spdlog.h>
 #include <chrono>
 #include <thread>
-
-#if defined(_WIN32)
 #include <Windows.h>
-#endif
 
 namespace illengine {
     void Engine::Startup(int width, int height, const std::string& name, bool fullscreen) {
-        #if defined(_WIN32)
-            timeBeginPeriod(1);
-        #endif
+        timeBeginPeriod(1);
+
         graphics.Startup(width, height, name, fullscreen);
+
+        input.SetWindow(graphics.GetWindow());
+
         spdlog::info("No way that engine started 0_0");
     }
 
     void Engine::Shutdown() {
         graphics.Shutdown();
         spdlog::info("Bye bye engine");
-        #if defined(_WIN32)
+
         timeEndPeriod(1);
-        #endif
     }
     
     void Engine::RunGameLoop() {
@@ -36,6 +34,10 @@ namespace illengine {
         while (!graphics.ShouldQuit()) {
             auto currentTime = steady_clock::now();
             lastTime = currentTime;
+            
+            input.Update();
+
+            if(updateCallback) updateCallback(input);
 
             auto frameTime = duration<real>(0);
             while(frameTime < frameDuration && !graphics.ShouldQuit()) {

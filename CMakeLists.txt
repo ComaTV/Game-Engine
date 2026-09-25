@@ -35,6 +35,7 @@ FetchContent_MakeAvailable(spdlog)
 add_library(illengine STATIC 
     src/Engine.cpp
     src/GraphicsManager.cpp
+    src/InputManager.cpp
 )
 
 set_target_properties(illengine PROPERTIES CXX_STANDARD 20)

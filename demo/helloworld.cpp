@@ -1,6 +1,10 @@
 #include <Engine.h>
+#include <spdlog/spdlog.h>
+#include "GLFW/glfw3.h"
 
 int main() {
+    spdlog::set_level(spdlog::level::debug);
+
     illengine::Engine engine;
 
     int width = 1024;
@@ -9,7 +13,15 @@ int main() {
     bool fullscreen = false;
 
     engine.Startup(width, height, name, fullscreen);
-    engine.RunGameLoop();
+
+    engine.RunGameLoop([](illengine::InputManager& input) {
+        if (input.KeyIsPressed(GLFW_KEY_ESCAPE)) 
+            spdlog::info("Escape key pressed, quitting...");
+        if (input.KeyIsPressed(GLFW_KEY_SPACE)) 
+            spdlog::info("Space key pressed");
+        if (input.KeyIsPressed(GLFW_KEY_W)) 
+            spdlog::info("W key pressed");
+    });
     engine.Shutdown();
     return 0;
 }
