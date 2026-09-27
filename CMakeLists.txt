@@ -1,52 +1,22 @@
-cmake_minimum_required(VERSION 3.14...3.30)
+cmake_minimum_required(VERSION 3.15)
+project(MyGame)
 
-project(Engine_Game LANGUAGES CXX C)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(FetchContent)
-set(FETCHCONTENT_QUIET FALSE)
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-## Install glfw
 FetchContent_Declare(
-    glfw3
-    GIT_REPOSITORY https://github.com/glfw/glfw.git
-    GIT_TAG 3.4
-    GIT_SHALLOW TRUE
-    GIT_PROGRESS TRUE
-    )
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable( glfw3 )
+    raylib
+    GIT_REPOSITORY https://github.com/raysan5/raylib.git
+    GIT_TAG 5.0
+) 
+FetchContent_MakeAvailable(raylib)
 
-FetchContent_Declare(
-    spdlog
-    GIT_REPOSITORY https://github.com/gabime/spdlog.git
-    GIT_TAG v1.14.1
-    GIT_SHALLOW TRUE
-    GIT_PROGRESS TRUE
-)
-FetchContent_MakeAvailable(spdlog)
+add_executable(${PROJECT_NAME} src/main.cpp src/Player.cpp)
 
-add_library(illengine STATIC 
-    src/Engine.cpp
-    src/GraphicsManager.cpp
-    src/InputManager.cpp
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/assets ${CMAKE_BINARY_DIR}/assets
 )
 
-set_target_properties(illengine PROPERTIES CXX_STANDARD 20)
-target_include_directories(illengine PUBLIC src)
-
-target_link_libraries(illengine PUBLIC glfw )
-target_link_libraries(illengine PRIVATE spdlog::spdlog)
-if (WIN32)
-    target_link_libraries(illengine PRIVATE winmm)
-endif()
-
-add_executable( helloworld demo/helloworld.cpp )
-set_target_properties(helloworld PROPERTIES CXX_STANDARD 20)
-target_link_libraries(helloworld PRIVATE illengine)
+target_link_libraries(${PROJECT_NAME} raylib)
