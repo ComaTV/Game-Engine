@@ -79,14 +79,25 @@ void Player::Draw()
 }
 void Player::PlaySounds()
 {
-    Sound currentSound;
-
     switch (state)
     {
-        case PlayerState::WALK: currentSound = walkingSound; break;
-        case PlayerState::RUN:  currentSound = runningSound; break;
-        default: break;
+        case PlayerState::WALK:
+            if (IsSoundPlaying(runningSound))
+                StopSound(runningSound);
+            if (!IsSoundPlaying(walkingSound))
+                PlaySound(walkingSound);
+            break;
+        case PlayerState::RUN:
+            if (IsSoundPlaying(walkingSound))
+                StopSound(walkingSound);
+            if (!IsSoundPlaying(runningSound))
+                PlaySound(runningSound);
+            break;
+        default:
+            if (IsSoundPlaying(walkingSound))
+                StopSound(walkingSound);
+            if (IsSoundPlaying(runningSound))
+                StopSound(runningSound);
+            break;
     }
-
-    PlaySound(currentSound);
 }

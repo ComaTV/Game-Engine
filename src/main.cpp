@@ -27,6 +27,7 @@ int main()
 
             player.HandleInput();
             player.Update(dt);
+            player.PlaySounds();
 
             BeginDrawing();
             ClearBackground(MAROON);
