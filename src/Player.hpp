@@ -1,38 +1,49 @@
 #pragma once
+
 #include "raylib.h"
 #include "PlayerState.hpp"
+#include <vector>
 
 class Player {
-    public:
-        Player(
-            const char* idlePath, 
-            const char* walkPath,
-            const char* runPath, 
-            const char* walkingSound, 
-            const char* runningSound
-        );
-        ~Player();
+public:
+    Player(
+        const char* idleFolder,
+        const char* walkFolder,
+        const char* runFolder,
+        const char* walkingSound,
+        const char* runningSound
+    );
 
-        void HandleInput();
-        void Update(float dt);
-        void Draw();
-        void PlaySounds();
+    ~Player();
 
-    private:
-        Texture2D   idleTexture;
-        Texture2D   walkTexture;
-        Texture2D   runTexture;
+    void HandleInput();
+    void Update(float dt);
+    void Draw();
+    void PlaySounds();
 
-        Sound walkingSound;
-        Sound runningSound;
+private:
+    std::vector<Texture2D> idleFrames;
+    std::vector<Texture2D> walkFrames;
+    std::vector<Texture2D> runFrames;
 
-        PlayerState state;
-        float posX, posY;
-        float speed;
-        float runSpeed;
-        float width = 200.0f;
-        float height = 200.0f;
-        bool facingLeft = false;
+    Sound walkingSound;
+    Sound runningSound;
 
-        void ChangeState(PlayerState newState);
+    PlayerState state;
+
+    float posX;
+    float posY;
+    float speed;
+    float runSpeed;
+    float width = 200.0f;
+    float height = 200.0f;
+
+    bool facingLeft = false;
+
+    int currentFrame = 0;
+    float animationTimer = 0.0f;
+    float frameDuration = 0.15f;
+
+    void ChangeState(PlayerState newState);
+    void ResetAnimation();
 };

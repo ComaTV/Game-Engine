@@ -3,15 +3,15 @@
 
 int main()
 {
-    InitWindow(800, 600, "Lil Buddy");
+    InitWindow(800, 600, "Konata Adventure");
     InitAudioDevice();
     SetTargetFPS(60);
 
     {
         Player player(
-            "assets/textures/animations/konata/idle.png",
-            "assets/textures/animations/konata/walk.png",
-            "assets/textures/animations/konata/run.png",
+            "assets/textures/animations/konata/idle",
+            "assets/textures/animations/konata/walk",
+            "assets/textures/animations/konata/run",
             "assets/sounds/konata/walking.wav",
             "assets/sounds/konata/running.wav"
         );
@@ -30,7 +30,7 @@ int main()
             player.PlaySounds();
 
             BeginDrawing();
-            ClearBackground(MAROON);
+            ClearBackground({ 135, 206, 235, 255 });
             player.Draw();
             EndDrawing();
         }
