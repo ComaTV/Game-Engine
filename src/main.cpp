@@ -3,7 +3,8 @@
 
 int main()
 {
-    InitWindow(800, 600, "Konata Adventure");
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    InitWindow(1280, 720, "Konata Adventure");
     InitAudioDevice();
     SetTargetFPS(60);
 
@@ -16,18 +17,14 @@ int main()
             "assets/sounds/konata/running.wav"
         );
 
-        while(!WindowShouldClose())
+        while (!WindowShouldClose())
         {
-            if (IsKeyPressed(KEY_D))
-            {
+            if (IsKeyPressed(KEY_F11))
                 ToggleFullscreen();
-            }
 
             float dt = GetFrameTime();
-
             player.HandleInput();
             player.Update(dt);
-            player.PlaySounds();
 
             BeginDrawing();
             ClearBackground({ 135, 206, 235, 255 });

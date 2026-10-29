@@ -37,6 +37,7 @@ private:
     float runSpeed;
     float width = 200.0f;
     float height = 200.0f;
+    float borderSize = 20.0f;
 
     bool facingLeft = false;
 
@@ -46,4 +47,5 @@ private:
 
     void ChangeState(PlayerState newState);
     void ResetAnimation();
+    void KeepInsideScreen();
 };

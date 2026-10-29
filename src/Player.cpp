@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -120,8 +121,8 @@ void Player::ResetAnimation()
 
 void Player::HandleInput()
 {
-    bool isMoving = IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_LEFT) ||
-                    IsKeyDown(KEY_UP) || IsKeyDown(KEY_DOWN);
+    bool isMoving = IsKeyDown(KEY_D) || IsKeyDown(KEY_A) ||
+                    IsKeyDown(KEY_W) || IsKeyDown(KEY_S);
     bool isRunning = IsKeyDown(KEY_LEFT_SHIFT);
 
     if(isMoving && isRunning)
@@ -139,22 +140,22 @@ void Player::Update(float dt)
 
     if (state != PlayerState::IDLE)
     {
-        if (IsKeyDown(KEY_RIGHT))
+        if (IsKeyDown(KEY_D))
         {
             posX += currentSpeed * dt;
             facingLeft = false;
         }
 
-        if (IsKeyDown(KEY_LEFT))
+        if (IsKeyDown(KEY_A))
         {
             posX -= currentSpeed * dt;
             facingLeft = true;
         }
 
-        if (IsKeyDown(KEY_UP))
+        if (IsKeyDown(KEY_W))
             posY -= currentSpeed * dt;
 
-        if (IsKeyDown(KEY_DOWN))
+        if (IsKeyDown(KEY_S))
             posY += currentSpeed * dt;
     }
 
@@ -175,23 +176,54 @@ void Player::Update(float dt)
             break;
     }
 
-    if (frames == nullptr || frames->size() <= 1)
-        return;
-
-    animationTimer += dt;
-
-    if (animationTimer >= frameDuration)
+    if (frames != nullptr && frames->size() > 1)
     {
-        animationTimer -= frameDuration;
-        currentFrame++;
+        animationTimer += dt;
 
-        if (currentFrame >= static_cast<int>(frames->size()))
-            currentFrame = 0;
+        while (animationTimer >= frameDuration)
+        {
+            animationTimer -= frameDuration;
+            currentFrame++;
+
+            if (currentFrame >= static_cast<int>(frames->size()))
+                currentFrame = 0;
+        }
     }
+
+    KeepInsideScreen();
+}
+
+void Player::KeepInsideScreen()
+{
+    const float screenWidth = static_cast<float>(GetScreenWidth());
+    const float screenHeight = static_cast<float>(GetScreenHeight());
+
+    posX = std::clamp(
+        posX,
+        borderSize,
+        std::max(borderSize, screenWidth - width - borderSize)
+    );
+    posY = std::clamp(
+        posY,
+        borderSize,
+        std::max(borderSize, screenHeight - height - borderSize)
+    );
 }
 
 void Player::Draw()
 {
+    const float screenWidth = static_cast<float>(GetScreenWidth());
+    const float screenHeight = static_cast<float>(GetScreenHeight());
+
+    Rectangle movementBounds = {
+        borderSize,
+        borderSize,
+        std::max(0.0f, screenWidth - 2.0f * borderSize),
+        std::max(0.0f, screenHeight - 2.0f * borderSize)
+    };
+
+    DrawRectangleLinesEx(movementBounds, 2.0f, RED);
+
     const std::vector<Texture2D>* frames = nullptr;
 
     switch (state)
@@ -212,8 +244,10 @@ void Player::Draw()
     if (frames == nullptr || frames->empty())
         return;
 
-    Texture2D currentTexture = (*frames)[currentFrame];
+    if (currentFrame >= static_cast<int>(frames->size()))
+        currentFrame = 0;
 
+    Texture2D currentTexture = (*frames)[currentFrame];
     Rectangle source = {
         0.0f,
         0.0f,
