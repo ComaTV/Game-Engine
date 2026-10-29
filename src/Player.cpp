@@ -2,6 +2,7 @@
 #include "Utils.hpp"
 
 #include <algorithm>
+#include <cmath>
 
 Player::Player(
     const char* idleFolder,
@@ -82,9 +83,11 @@ void Player::HandleInput()
     }
 }
 
-void Player::Update(float dt)
+void Player::Update(float dt, const std::vector<Rectangle>& obstacles)
 {
     const bool wasGrounded = grounded;
+    const float previousX = posX;
+    const float previousY = posY;
 
     float currentSpeed =
         (state == PlayerState::RUN) ? runSpeed : speed;
@@ -109,6 +112,7 @@ void Player::Update(float dt)
     posY += verticalVelocity * dt;
 
     KeepInsideScreen();
+    ResolveObstacleCollision(obstacles, previousX, previousY);
 
     const bool justLanded = !wasGrounded && grounded;
     const std::vector<Texture2D>* frames = nullptr;
@@ -165,6 +169,46 @@ void Player::Update(float dt)
         }
     }
 
+}
+
+void Player::ResolveObstacleCollision(
+    const std::vector<Rectangle>& obstacles,
+    float previousX,
+    float previousY
+)
+{
+    Rectangle playerBounds = { posX, posY, width, height };
+    const float previousBottom = previousY + height;
+    const float previousRight = previousX + width;
+    const float previousLeft = previousX;
+
+    for (const Rectangle& obstacle : obstacles)
+    {
+        const bool overlapsHorizontally =
+            playerBounds.x < obstacle.x + obstacle.width &&
+            playerBounds.x + playerBounds.width > obstacle.x;
+
+        if (overlapsHorizontally &&
+            verticalVelocity >= 0.0f &&
+            previousBottom <= obstacle.y &&
+            playerBounds.y + playerBounds.height >= obstacle.y)
+        {
+            posY = obstacle.y - height;
+            verticalVelocity = 0.0f;
+            grounded = true;
+            return;
+        }
+
+        if (!CheckCollisionRecs(playerBounds, obstacle))
+            continue;
+
+        if (previousRight <= obstacle.x)
+            posX = obstacle.x - width;
+        else if (previousLeft >= obstacle.x + obstacle.width)
+            posX = obstacle.x + obstacle.width;
+
+        return;
+    }
 }
 
 void Player::KeepInsideScreen()

@@ -18,7 +18,7 @@ public:
     ~Player();
 
     void HandleInput();
-    void Update(float dt);
+    void Update(float dt, const std::vector<Rectangle>& obstacles);
     void Draw();
     void PlaySounds();
 
@@ -54,4 +54,9 @@ private:
     void ChangeState(PlayerState newState);
     void ResetAnimation();
     void KeepInsideScreen();
+    void ResolveObstacleCollision(
+        const std::vector<Rectangle>& obstacles,
+        float previousX,
+        float previousY
+    );
 };

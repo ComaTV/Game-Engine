@@ -11,6 +11,7 @@ World::World()
         "assets/sounds/konata/running.wav"
     )
 {
+    obstacles = Obstacles::CreateDefault();
 }
 
 void World::HandleInput()
@@ -20,11 +21,14 @@ void World::HandleInput()
 
 void World::Update(float dt)
 {
-    player.Update(dt);
+    Obstacles::KeepOnFloor(obstacles);
+    player.Update(dt, Obstacles::GetBounds(obstacles));
 }
 
 void World::Draw()
 {
     Utils::DrawScreenBorder(20.0f, 2.0f, RED);
+
+    Obstacles::Draw(obstacles);
     player.Draw();
 }

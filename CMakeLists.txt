@@ -15,6 +15,7 @@ FetchContent_MakeAvailable(raylib)
 add_executable(
     ${PROJECT_NAME}
     src/main.cpp
+    src/Obstacles.cpp
     src/Player.cpp
     src/World.cpp
     src/Utils.cpp

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Obstacles.hpp"
 #include "Player.hpp"
 
 class World
@@ -13,4 +14,5 @@ public:
 
 private:
     Player player;
+    std::vector<Obstacle> obstacles;
 };
