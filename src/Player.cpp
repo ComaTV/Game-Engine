@@ -1,86 +1,24 @@
 #include "Player.hpp"
+#include "Utils.hpp"
 
 #include <algorithm>
-#include <filesystem>
-#include <iostream>
-#include <string>
-#include <vector>
-
-namespace fs = std::filesystem;
-
-static std::vector<Texture2D> LoadAnimationFrames(
-    const std::string& folderPath
-)
-{
-    std::vector<fs::path> imagePaths;
-
-    if (!fs::exists(folderPath) || !fs::is_directory(folderPath))
-    {
-        TraceLog(
-            LOG_ERROR,
-            "Animation folder not found: %s",
-            folderPath.c_str()
-        );
-
-        return {};
-    }
-
-    for (const fs::directory_entry& entry : fs::directory_iterator(folderPath))
-    {
-        if (!entry.is_regular_file())
-            continue;
-
-        const std::string extension =
-            entry.path().extension().string();
-
-        if (extension == ".png" ||
-            extension == ".jpg" ||
-            extension == ".jpeg")
-        {
-            imagePaths.push_back(entry.path());
-        }
-    }
-
-    std::sort(imagePaths.begin(), imagePaths.end());
-
-    std::vector<Texture2D> frames;
-    frames.reserve(imagePaths.size());
-
-    for (const fs::path& imagePath : imagePaths)
-    {
-        Texture2D texture = LoadTexture(imagePath.string().c_str());
-
-        if (texture.id == 0)
-        {
-            TraceLog(
-                LOG_ERROR,
-                "Failed to load animation frame: %s",
-                imagePath.string().c_str()
-            );
-
-            continue;
-        }
-
-        frames.push_back(texture);
-    }
-
-    return frames;
-}
 
 Player::Player(
     const char* idleFolder,
     const char* walkFolder,
     const char* runFolder,
+    const char* jumpFolder,
     const char* walkingPath,
     const char* runningPath
 )
 {
-    idleFrames = LoadAnimationFrames(idleFolder);
-    walkFrames = LoadAnimationFrames(walkFolder);
-    runFrames = LoadAnimationFrames(runFolder);
+    idleFrames = Utils::LoadAnimationFrames(idleFolder);
+    walkFrames = Utils::LoadAnimationFrames(walkFolder);
+    runFrames = Utils::LoadAnimationFrames(runFolder);
+    jumpFrames = Utils::LoadAnimationFrames(jumpFolder);
 
-    walkingSound = LoadSound(walkingPath);
-    runningSound = LoadSound(runningPath);
+    walkingSound = Utils::LoadSoundFile(walkingPath);
+    runningSound = Utils::LoadSoundFile(runningPath);
 
     state = PlayerState::IDLE;
     posX = 300.0f;
@@ -91,14 +29,10 @@ Player::Player(
 
 Player::~Player()
 {
-    for (Texture2D texture : idleFrames)
-        UnloadTexture(texture);
-
-    for (Texture2D texture : walkFrames)
-        UnloadTexture(texture);
-
-    for (Texture2D texture : runFrames)
-        UnloadTexture(texture);
+    Utils::UnloadTextures(idleFrames);
+    Utils::UnloadTextures(walkFrames);
+    Utils::UnloadTextures(runFrames);
+    Utils::UnloadTextures(jumpFrames);
 
     UnloadSound(walkingSound);
     UnloadSound(runningSound);
@@ -121,20 +55,37 @@ void Player::ResetAnimation()
 
 void Player::HandleInput()
 {
-    bool isMoving = IsKeyDown(KEY_D) || IsKeyDown(KEY_A) ||
-                    IsKeyDown(KEY_W) || IsKeyDown(KEY_S);
+    bool isMoving = IsKeyDown(KEY_D) || IsKeyDown(KEY_A);
     bool isRunning = IsKeyDown(KEY_LEFT_SHIFT);
 
-    if(isMoving && isRunning)
+    if (IsKeyPressed(KEY_SPACE) && grounded)
+    {
+        verticalVelocity = -jumpStrength;
+        grounded = false;
+        ChangeState(PlayerState::JUMP);
+    }
+    else if (!grounded)
+    {
+        ChangeState(PlayerState::JUMP);
+    }
+    else if (isMoving && isRunning)
+    {
         ChangeState(PlayerState::RUN);
-    else if(isMoving)
+    }
+    else if (isMoving)
+    {
         ChangeState(PlayerState::WALK);
-    else 
+    }
+    else
+    {
         ChangeState(PlayerState::IDLE);
+    }
 }
 
 void Player::Update(float dt)
 {
+    const bool wasGrounded = grounded;
+
     float currentSpeed =
         (state == PlayerState::RUN) ? runSpeed : speed;
 
@@ -152,13 +103,14 @@ void Player::Update(float dt)
             facingLeft = true;
         }
 
-        if (IsKeyDown(KEY_W))
-            posY -= currentSpeed * dt;
-
-        if (IsKeyDown(KEY_S))
-            posY += currentSpeed * dt;
     }
 
+    verticalVelocity += gravity * dt;
+    posY += verticalVelocity * dt;
+
+    KeepInsideScreen();
+
+    const bool justLanded = !wasGrounded && grounded;
     const std::vector<Texture2D>* frames = nullptr;
 
     switch (state)
@@ -174,9 +126,32 @@ void Player::Update(float dt)
         case PlayerState::RUN:
             frames = &runFrames;
             break;
+
+        case PlayerState::JUMP:
+            frames = &jumpFrames;
+            break;
     }
 
-    if (frames != nullptr && frames->size() > 1)
+    if (state == PlayerState::JUMP && !jumpFrames.empty())
+    {
+        if (justLanded)
+        {
+            currentFrame =
+                std::min(3, static_cast<int>(jumpFrames.size()) - 1);
+            animationTimer = 0.0f;
+        }
+        else if (!grounded && jumpFrames.size() > 1)
+        {
+            animationTimer += dt;
+
+            while (animationTimer >= frameDuration)
+            {
+                animationTimer -= frameDuration;
+                currentFrame = std::min(currentFrame + 1, 2);
+            }
+        }
+    }
+    else if (frames != nullptr && frames->size() > 1)
     {
         animationTimer += dt;
 
@@ -190,7 +165,6 @@ void Player::Update(float dt)
         }
     }
 
-    KeepInsideScreen();
 }
 
 void Player::KeepInsideScreen()
@@ -203,27 +177,22 @@ void Player::KeepInsideScreen()
         borderSize,
         std::max(borderSize, screenWidth - width - borderSize)
     );
-    posY = std::clamp(
-        posY,
-        borderSize,
-        std::max(borderSize, screenHeight - height - borderSize)
-    );
+    const float floorY = std::max(borderSize, screenHeight - height - borderSize);
+
+    if (posY >= floorY)
+    {
+        posY = floorY;
+        verticalVelocity = 0.0f;
+        grounded = true;
+    }
+    else
+    {
+        grounded = false;
+    }
 }
 
 void Player::Draw()
 {
-    const float screenWidth = static_cast<float>(GetScreenWidth());
-    const float screenHeight = static_cast<float>(GetScreenHeight());
-
-    Rectangle movementBounds = {
-        borderSize,
-        borderSize,
-        std::max(0.0f, screenWidth - 2.0f * borderSize),
-        std::max(0.0f, screenHeight - 2.0f * borderSize)
-    };
-
-    DrawRectangleLinesEx(movementBounds, 2.0f, RED);
-
     const std::vector<Texture2D>* frames = nullptr;
 
     switch (state)
@@ -238,6 +207,10 @@ void Player::Draw()
 
         case PlayerState::RUN:
             frames = &runFrames;
+            break;
+
+        case PlayerState::JUMP:
+            frames = &jumpFrames;
             break;
     }
 

@@ -10,6 +10,7 @@ public:
         const char* idleFolder,
         const char* walkFolder,
         const char* runFolder,
+        const char* jumpFolder,
         const char* walkingSound,
         const char* runningSound
     );
@@ -25,6 +26,7 @@ private:
     std::vector<Texture2D> idleFrames;
     std::vector<Texture2D> walkFrames;
     std::vector<Texture2D> runFrames;
+    std::vector<Texture2D> jumpFrames;
 
     Sound walkingSound;
     Sound runningSound;
@@ -38,6 +40,10 @@ private:
     float width = 200.0f;
     float height = 200.0f;
     float borderSize = 20.0f;
+    float verticalVelocity = 0.0f;
+    float gravity = 1400.0f;
+    float jumpStrength = 600.0f;
+    bool grounded = false;
 
     bool facingLeft = false;
 

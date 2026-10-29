@@ -12,7 +12,13 @@ FetchContent_Declare(
 ) 
 FetchContent_MakeAvailable(raylib)
 
-add_executable(${PROJECT_NAME} src/main.cpp src/Player.cpp)
+add_executable(
+    ${PROJECT_NAME}
+    src/main.cpp
+    src/Player.cpp
+    src/World.cpp
+    src/Utils.cpp
+)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory

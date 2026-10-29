@@ -3,5 +3,6 @@
 enum class PlayerState {
     IDLE,
     WALK,
-    RUN
+    RUN,
+    JUMP
 };

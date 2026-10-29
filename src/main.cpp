@@ -1,5 +1,5 @@
 #include "raylib.h"
-#include "Player.hpp"
+#include "World.hpp"
 
 int main()
 {
@@ -9,13 +9,7 @@ int main()
     SetTargetFPS(60);
 
     {
-        Player player(
-            "assets/textures/animations/konata/idle",
-            "assets/textures/animations/konata/walk",
-            "assets/textures/animations/konata/run",
-            "assets/sounds/konata/walking.wav",
-            "assets/sounds/konata/running.wav"
-        );
+        World world;
 
         while (!WindowShouldClose())
         {
@@ -23,12 +17,12 @@ int main()
                 ToggleFullscreen();
 
             float dt = GetFrameTime();
-            player.HandleInput();
-            player.Update(dt);
+            world.HandleInput();
+            world.Update(dt);
 
             BeginDrawing();
             ClearBackground({ 135, 206, 235, 255 });
-            player.Draw();
+            world.Draw();
             EndDrawing();
         }
     }
